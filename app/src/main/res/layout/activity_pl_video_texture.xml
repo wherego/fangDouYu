@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/colorwhite"
+    >
+
+<FrameLayout
+    android:id="@+id/player_layout_vertical"
+    android:layout_width="match_parent"
+    android:layout_height="200dp"
+    android:background="@color/colorwhite"
+    android:orientation="vertical">
+
+    <com.pili.pldroid.player.widget.PLVideoTextureView
+        android:id="@+id/VideoView"
+        android:layout_width="match_parent"
+        android:layout_height="200dp"/>
+
+
+
+    <ImageView
+        android:id="@+id/CoverView"
+        android:layout_width="match_parent"
+        android:layout_height="200dp"
+        android:src="@drawable/image_loading_16_9"/>
+
+    <LinearLayout
+        android:id="@+id/LoadingView"
+        android:layout_width="match_parent"
+        android:layout_height="200dp"
+        android:gravity="center"
+        android:orientation="horizontal">
+
+        <ImageView
+            android:id="@+id/load_img"
+            android:layout_width="80dp"
+            android:layout_height="80dp"
+            android:orientation="vertical"
+            android:src="@drawable/load_content_anim"
+            />
+
+    </LinearLayout>
+</FrameLayout>
+
+
+
+    <master.flame.danmaku.ui.widget.DanmakuView
+        android:id="@+id/danmakuView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+    <android.support.v7.widget.RecyclerView
+        android:id="@+id/chatRecyclerView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@id/player_layout_vertical"
+        ></android.support.v7.widget.RecyclerView>
+</RelativeLayout>

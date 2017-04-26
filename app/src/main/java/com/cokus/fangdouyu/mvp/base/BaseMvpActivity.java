@@ -16,7 +16,7 @@ import com.orhanobut.logger.Logger;
  * @param <M>
  */
 
-public abstract class BaseMvpActivity<P extends BasePresenter, M extends BaseModel> extends BaseActivity implements BaseView {
+public abstract class BaseMvpActivity<P extends BasePresenter, M extends BaseModel> extends com.cokus.fangdouyu.base.BaseMvpActivity implements BaseView {
 
     public P mPresenter;
     public M mModel;
@@ -29,13 +29,20 @@ public abstract class BaseMvpActivity<P extends BasePresenter, M extends BaseMod
         if (this instanceof BaseView) {
             mPresenter.setVM(this, mModel);
         }
+        initView();
+        loadData();
     }
+
+    protected abstract void loadData();
+    protected abstract void initView();
 
     @Override
     protected void onDestroy() {
         if (mPresenter != null) mPresenter.onDestroy();
         super.onDestroy();
     }
+
+
 
     @Override
     public void onInternetError() {

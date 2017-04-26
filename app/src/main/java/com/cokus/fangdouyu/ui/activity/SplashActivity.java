@@ -18,6 +18,7 @@ import java.util.concurrent.TimeUnit;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
+import qiu.niorgai.StatusBarCompat;
 import rx.Observable;
 import rx.Scheduler;
 import rx.Subscriber;
@@ -89,7 +90,8 @@ public class SplashActivity extends BaseActivity{
 
     @Override
     protected void initView() {
-        StatusBarUtil.setTransparentForImageView(this,null);
+        StatusBarCompat.translucentStatusBar(this);
+//        StatusBarUtil.setTransparentForImageView(this,null);
         DYApplication.glideBitmap.displayAdImage(img,AD_URL, DensityUtil.getScreenHeight(SplashActivity.this));
     }
 

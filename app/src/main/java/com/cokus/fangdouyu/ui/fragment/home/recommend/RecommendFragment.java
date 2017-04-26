@@ -1,5 +1,6 @@
 package com.cokus.fangdouyu.ui.fragment.home.recommend;
 
+import android.content.Intent;
 import android.os.Handler;
 import android.support.v4.view.ViewPager;
 import android.support.v7.widget.LinearLayoutManager;
@@ -8,11 +9,17 @@ import android.view.LayoutInflater;
 import android.view.View;
 
 import com.cokus.fangdouyu.R;
+import com.cokus.fangdouyu.listener.OnItemClick;
+import com.cokus.fangdouyu.modle.recommend.HotCategory;
 import com.cokus.fangdouyu.modle.recommend.RecommendData;
 import com.cokus.fangdouyu.mvp.base.BaseMvpFragment;
+import com.cokus.fangdouyu.ui.activity.player.PLVideoTextureActivity;
+import com.cokus.fangdouyu.ui.activity.player.PlayerActivity;
 import com.cokus.fangdouyu.ui.fragment.home.recommend.adapter.CategoryAdapter;
 import com.cokus.fangdouyu.ui.fragment.home.recommend.adapter.RecommendAdapter;
 import com.cokus.fangdouyu.ui.fragment.home.recommend.adapter.RecommendIndicatorViewPagerAdapter;
+import com.cokus.fangdouyu.util.IntentUtils;
+import com.cokus.fangdouyu.util.ToastUtils;
 import com.cokus.fangdouyu.widget.MultiStateView;
 import com.cokus.fangdouyu.widget.refresh.DouYuRefreshEmptyBottem;
 import com.cokus.fangdouyu.widget.refresh.DouYuRefreshHeader;
@@ -124,7 +131,15 @@ public class RecommendFragment extends BaseMvpFragment<RecommendFragmentPresente
 
     public void initRecyclcer(){
         if(recommendAdapter == null) {
-            recommendAdapter = new RecommendAdapter(recommendData.getHotCategory().getData(), getActivity());
+            recommendAdapter = new RecommendAdapter(recommendData.getHotCategory().getData(), getActivity(),new OnItemClick(){
+                @Override
+                public <T> void OnItemClick(int position, T t) {
+                    HotCategory.DataBean.RoomListBean bean = (HotCategory.DataBean.RoomListBean)t;
+                   Intent intent =  IntentUtils.getIntent(getActivity(), PLVideoTextureActivity.class,null);
+                    intent.putExtra("roomId",bean.getRoom_id());
+                    startActivity(intent);
+                }
+            });
             recommendAdapter.addHeaderView(headView);
             mRecyclerView.setAdapter(recommendAdapter);
         }else{

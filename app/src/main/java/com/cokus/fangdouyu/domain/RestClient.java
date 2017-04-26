@@ -3,6 +3,7 @@ package com.cokus.fangdouyu.domain;
 import com.cokus.fangdouyu.domain.service.ConcernService;
 import com.cokus.fangdouyu.domain.service.HomeService;
 import com.cokus.fangdouyu.domain.service.LiveService;
+import com.cokus.fangdouyu.domain.service.LiveStreamService;
 
 import okhttp3.OkHttpClient;
 import okhttp3.logging.HttpLoggingInterceptor;
@@ -24,6 +25,8 @@ public class RestClient {
 
     private ConcernService concernService;
 
+
+
     public HomeService getHomeService() {
         return homeService == null ?  create(HomeService.class) :homeService;
     }
@@ -31,6 +34,8 @@ public class RestClient {
     public LiveService getLiveService() {
         return liveService == null ?  create(LiveService.class) :liveService;
     }
+
+
 
     public ConcernService getConcernService() {
         return concernService == null ?  create(ConcernService.class) :concernService;

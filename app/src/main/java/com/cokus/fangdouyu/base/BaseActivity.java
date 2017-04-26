@@ -7,9 +7,12 @@ import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import com.cokus.fangdouyu.R;
+import com.cokus.fangdouyu.util.LogUtils;
+
 import butterknife.ButterKnife;
 import butterknife.Unbinder;
 
@@ -29,7 +32,9 @@ public abstract class BaseActivity extends AppCompatActivity{
         mUnBinder = ButterKnife.bind(this);
         initView();
         loadData();
+        Log.e("test","test");
     }
+
 
     protected abstract void loadData();
     protected abstract int getLayout();

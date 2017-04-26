@@ -11,4 +11,6 @@
     <string name="msv_network_bad">网络错误, 请检查您的网络设置.</string>
     <string name="msv_loading">正在加载...</string>
     <string name="msv_empty">暂无数据</string>
+
+    <string name="buffering">buffering</string>
 </resources>

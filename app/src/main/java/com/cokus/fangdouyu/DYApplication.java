@@ -19,13 +19,13 @@ public class DYApplication extends Application {
     public void onCreate() {
         super.onCreate();
         if(Constants.isDebug) {
-            if (LeakCanary.isInAnalyzerProcess(this)) {
-                // This process is dedicated to LeakCanary for heap analysis.
-                // You should not init your app in this process.
-                return;
-            }
-            LeakCanary.install(this);
-            BlockCanary.install(this, new AppContext()).start();
+//            if (LeakCanary.isInAnalyzerProcess(this)) {
+//                // This process is dedicated to LeakCanary for heap analysis.
+//                // You should not init your app in this process.
+//                return;
+//            }
+//            LeakCanary.install(this);
+//            BlockCanary.install(this, new AppContext()).start();
         }
         init();
 

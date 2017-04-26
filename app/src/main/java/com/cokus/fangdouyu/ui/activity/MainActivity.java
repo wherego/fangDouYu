@@ -23,12 +23,15 @@ import com.cokus.fangdouyu.widget.viewpagerindicator.view.indicator.IndicatorVie
 import com.cokus.fangdouyu.widget.viewpagerindicator.view.indicator.transition.OnTransitionTextListener;
 import com.cokus.fangdouyu.widget.viewpagerindicator.view.viewpager.SViewPager;
 import com.jaeger.library.StatusBarUtil;
+import com.squareup.haha.perflib.Main;
+
 import java.util.ArrayList;
 import java.util.List;
 
 import javax.inject.Inject;
 
 import butterknife.BindView;
+import qiu.niorgai.StatusBarCompat;
 
 public class MainActivity extends BaseActivity {
     IndicatorViewPager indicatorViewPager;
@@ -61,7 +64,7 @@ public class MainActivity extends BaseActivity {
     @Override
     protected void initView() {
         DaggerMainActivityComponent.create().inject(this);
-        StatusBarUtil.setColor(MainActivity.this, Color.parseColor("#00ff921b"),0);
+        StatusBarCompat.setStatusBarColor(MainActivity.this,Color.parseColor("#00ff921b"),0);
         indicator.setOnTransitionListener(new OnTransitionTextListener().setColor(Color.parseColor("#ffff921b"), Color.GRAY));
         indicatorViewPager = new IndicatorViewPager(indicator, viewPager);
         indicatorViewPager.setAdapter(new MyAdapter(getSupportFragmentManager()));
@@ -70,26 +73,31 @@ public class MainActivity extends BaseActivity {
             public void onIndicatorPageChange(int preItem, int currentItem) {
                 switch (currentItem){
                     case 0:
-                        if (isFullScreen) {
-                            resetFragmentView(fragments.get(currentItem));
-                        }
-                        StatusBarUtil.setColor(MainActivity.this, Color.parseColor("#00ff921b"),0);
+//                        if (isFullScreen) {
+//                            resetFragmentView(fragments.get(currentItem));
+//                        }
+//                        StatusBarUtil.setColor(MainActivity.this, Color.parseColor("#00ff921b"));
+                        StatusBarCompat.setStatusBarColor(MainActivity.this,Color.parseColor("#00ff921b"),0);
                         break;
                     case 1:
-                        if (isFullScreen) {
-                            resetFragmentView(fragments.get(currentItem));
-                        }
-                        StatusBarUtil.setColor(MainActivity.this, Color.parseColor("#00ff921b"),0);
+//                        if (isFullScreen) {
+//                            resetFragmentView(fragments.get(currentItem));
+//                        }
+//                        StatusBarUtil.setColor(MainActivity.this, Color.parseColor("#00ff921b"));
+                        StatusBarCompat.setStatusBarColor(MainActivity.this,Color.parseColor("#00ff921b"),0);
                         break;
                     case 2:
-                        if (isFullScreen) {
-                            resetFragmentView(fragments.get(currentItem));
-                        }
-                        StatusBarUtil.setColor(MainActivity.this, Color.parseColor("#00ff921b"),0);
+//                        if (isFullScreen) {
+//                            resetFragmentView(fragments.get(currentItem));
+//                        }
+//                        StatusBarUtil.setColor(MainActivity.this, Color.parseColor("#00ff921b"));
+                        StatusBarCompat.setStatusBarColor(MainActivity.this,Color.parseColor("#00ff921b"),0);
                         break;
                     case 3:
                         isFullScreen = true;
-                        StatusBarUtil.setTranslucentForImageViewInFragment(MainActivity.this,0,null);
+                        StatusBarCompat.translucentStatusBar(MainActivity.this);
+//                        StatusBarUtil.setTranslucent(MainActivity.this,100);
+//                        StatusBarUtil.setTranslucentForImageViewInFragment(MainActivity.this,0,null);
                         break;
                 }
             }

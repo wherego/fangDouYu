@@ -24,4 +24,5 @@ public interface LiveService {
 
     @GET("/api/v1/live/{tag_id}?limit=20&client_sys=android")
     Observable<LiveRoom> getLiveRoomByCategoty(@Path("tag_id") String tag_id,@Query("offset") String offset);
+
 }
