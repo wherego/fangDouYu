@@ -1,7 +1,6 @@
 package com.cokus.fangdouyu.mvp.base;
 
 import android.os.Bundle;
-import android.support.v4.app.Fragment;
 
 import com.cokus.fangdouyu.base.BaseFragment;
 import com.cokus.fangdouyu.mvp.BaseModel;
@@ -19,7 +18,7 @@ import org.greenrobot.eventbus.EventBus;
  * @param <M>
  */
 
-public abstract  class BaseMvpFragment<P extends BasePresenter, M extends BaseModel> extends BaseFragment implements BaseView {
+public abstract  class BaseMvpEventbusFragment<P extends BasePresenter, M extends BaseModel> extends BaseFragment implements BaseView {
 
     public P mPresenter;
 
@@ -34,6 +33,7 @@ public abstract  class BaseMvpFragment<P extends BasePresenter, M extends BaseMo
         if (this instanceof BaseView) {
             mPresenter.setVM(this, mModel);
         }
+        EventBus.getDefault().register(this);
 
     }
 
@@ -41,6 +41,7 @@ public abstract  class BaseMvpFragment<P extends BasePresenter, M extends BaseMo
     public void onDestroy() {
         if (mPresenter != null) mPresenter.onDestroy();
         super.onDestroy();
+        EventBus.getDefault().unregister(this);
     }
 
     @Override

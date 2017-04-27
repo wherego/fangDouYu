@@ -9,23 +9,27 @@ import android.view.LayoutInflater;
 import android.view.View;
 
 import com.cokus.fangdouyu.R;
+import com.cokus.fangdouyu.db.HistoryRoom;
+import com.cokus.fangdouyu.event.RoomEvent;
+import com.cokus.fangdouyu.gen.HistoryRoomDao;
 import com.cokus.fangdouyu.listener.OnItemClick;
 import com.cokus.fangdouyu.modle.recommend.HotCategory;
 import com.cokus.fangdouyu.modle.recommend.RecommendData;
 import com.cokus.fangdouyu.mvp.base.BaseMvpFragment;
-import com.cokus.fangdouyu.ui.activity.player.PLVideoTextureActivity;
-import com.cokus.fangdouyu.ui.activity.player.PlayerActivity;
+import com.cokus.fangdouyu.ui.activity.player.LivePlayerActivity;
 import com.cokus.fangdouyu.ui.fragment.home.recommend.adapter.CategoryAdapter;
 import com.cokus.fangdouyu.ui.fragment.home.recommend.adapter.RecommendAdapter;
 import com.cokus.fangdouyu.ui.fragment.home.recommend.adapter.RecommendIndicatorViewPagerAdapter;
 import com.cokus.fangdouyu.util.IntentUtils;
-import com.cokus.fangdouyu.util.ToastUtils;
 import com.cokus.fangdouyu.widget.MultiStateView;
 import com.cokus.fangdouyu.widget.refresh.DouYuRefreshEmptyBottem;
 import com.cokus.fangdouyu.widget.refresh.DouYuRefreshHeader;
 import com.cokus.fangdouyu.widget.viewpagerindicator.view.indicator.BannerComponent;
 import com.cokus.fangdouyu.widget.viewpagerindicator.view.indicator.Indicator;
 import com.lcodecore.tkrefreshlayout.TwinklingRefreshLayout;
+
+import org.greenrobot.eventbus.EventBus;
+
 import butterknife.BindView;
 
 /**
@@ -135,9 +139,15 @@ public class RecommendFragment extends BaseMvpFragment<RecommendFragmentPresente
                 @Override
                 public <T> void OnItemClick(int position, T t) {
                     HotCategory.DataBean.RoomListBean bean = (HotCategory.DataBean.RoomListBean)t;
-                   Intent intent =  IntentUtils.getIntent(getActivity(), PLVideoTextureActivity.class,null);
-                    intent.putExtra("roomId",bean.getRoom_id());
+                    HistoryRoom historyRoom = new HistoryRoom();
+                    historyRoom.setAvatar(bean.getNickname());
+                    historyRoom.setAvatar_small(bean.getAvatar_small());
+                    historyRoom.setRoomId(bean.getRoom_id());
+                    historyRoom.setOnline(bean.getOnline());
+                    Intent intent =  IntentUtils.getIntent(getActivity(), LivePlayerActivity.class,null);
                     startActivity(intent);
+                    EventBus.getDefault().postSticky(new RoomEvent(historyRoom));
+
                 }
             });
             recommendAdapter.addHeaderView(headView);

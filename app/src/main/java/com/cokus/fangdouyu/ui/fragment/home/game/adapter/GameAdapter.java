@@ -7,6 +7,7 @@ import android.support.v7.widget.RecyclerView;
 import com.cokus.fangdouyu.R;
 import com.cokus.fangdouyu.base.adapter.BaseQuickAdapter;
 import com.cokus.fangdouyu.base.adapter.BaseViewHolder;
+import com.cokus.fangdouyu.listener.OnItemClick;
 import com.cokus.fangdouyu.modle.game.Game;
 
 import java.util.List;
@@ -16,10 +17,12 @@ import java.util.List;
  */
 public class GameAdapter extends BaseQuickAdapter<Game.DataBean>{
     private Context context;
+    private OnItemClick onItemClick;
 
-    public GameAdapter(List<Game.DataBean> data, Context context) {
+    public GameAdapter(List<Game.DataBean> data, Context context, OnItemClick onItemClick) {
         super(R.layout.item_recommend, data);
         this.context = context;
+        this.onItemClick = onItemClick;
     }
 
     @Override
@@ -28,7 +31,7 @@ public class GameAdapter extends BaseQuickAdapter<Game.DataBean>{
         RecyclerView recyclerView = helper.getView(R.id.category_recyclerview);
         if(recyclerView.getAdapter()== null) {
             recyclerView.setLayoutManager(new GridLayoutManager(context,2));
-            recyclerView.setAdapter(new GameRoomAdapter(item.getRoom_list()));
+            recyclerView.setAdapter(new GameRoomAdapter(item.getRoom_list(),onItemClick));
         }else{
             ((GameRoomAdapter)recyclerView.getAdapter()).setNewData(item.getRoom_list());
         }

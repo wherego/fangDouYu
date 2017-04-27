@@ -32,7 +32,6 @@ public abstract class BaseActivity extends AppCompatActivity{
         mUnBinder = ButterKnife.bind(this);
         initView();
         loadData();
-        Log.e("test","test");
     }
 
 

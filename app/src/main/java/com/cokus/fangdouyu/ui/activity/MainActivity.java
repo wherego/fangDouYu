@@ -1,12 +1,16 @@
 package com.cokus.fangdouyu.ui.activity;
 
+import android.content.Intent;
 import android.graphics.Color;
+import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
+import android.support.v7.widget.Toolbar;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 import com.cokus.fangdouyu.R;
@@ -24,6 +28,8 @@ import com.cokus.fangdouyu.widget.viewpagerindicator.view.indicator.transition.O
 import com.cokus.fangdouyu.widget.viewpagerindicator.view.viewpager.SViewPager;
 import com.jaeger.library.StatusBarUtil;
 import com.squareup.haha.perflib.Main;
+import com.uuzuche.lib_zxing.activity.CodeUtils;
+import com.uuzuche.lib_zxing.activity.ZXingLibrary;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -49,11 +55,13 @@ public class MainActivity extends BaseActivity {
     @Inject
     MyFragment myFragment;
 
+    public static final  int REQUEST_CODE =100;
+
 
 
     @Override
     protected void loadData() {
-
+        ZXingLibrary.initDisplayOpinion(this);
     }
 
     @Override
@@ -180,30 +188,26 @@ public class MainActivity extends BaseActivity {
 //    }
 
 
-//    ImageView searchImg;
-//    ImageView scannerImg;
-//    ImageView historyImg;
-//
-//    @Override
-//    public void onCreateCustomToolBar(Toolbar toolbar) {
-//        super.onCreateCustomToolBar(toolbar);
-//        toolbar.showOverflowMenu();
-//        View view = getLayoutInflater().inflate(R.layout.actionbar, toolbar) ;
-//        searchImg = ButterKnife.findById(view,R.id.search);
-//        scannerImg = ButterKnife.findById(view,R.id.scanner);
-//        historyImg = ButterKnife.findById(view,R.id.history);
-//    }
-//
-//    @OnClick({R.id.scanner,R.id.history,R.id.search})
-//    public void getView(View view){
-//        switch (view.getId()){
-//            case  R.id.scanner:
-//                new IntentIntegrator(this).initiateScan(); // `this` is the current Activity
-//                break;
-//            case R.id.search:
-//                break;
-//            case R.id.history:
-//                break;
-//        }
-//    }
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        /**
+         * 处理二维码扫描结果
+         */
+        if (requestCode == REQUEST_CODE) {
+            //处理扫描结果（在界面上显示）
+            if (null != data) {
+                Bundle bundle = data.getExtras();
+                if (bundle == null) {
+                    return;
+                }
+                if (bundle.getInt(CodeUtils.RESULT_TYPE) == CodeUtils.RESULT_SUCCESS) {
+                    String result = bundle.getString(CodeUtils.RESULT_STRING);
+                    Toast.makeText(this, "解析结果:" + result, Toast.LENGTH_LONG).show();
+                } else if (bundle.getInt(CodeUtils.RESULT_TYPE) == CodeUtils.RESULT_FAILED) {
+                    Toast.makeText(MainActivity.this, "解析二维码失败", Toast.LENGTH_LONG).show();
+                }
+            }
+        }
+    }
 }

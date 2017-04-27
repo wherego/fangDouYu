@@ -20,6 +20,7 @@ public interface LivePlayerContract {
 
     interface View extends BaseView {
         void getData(GsonDouyuRoom data);
+
     }
 
     abstract class Presenter extends BasePresenter<LivePlayerContract.Model,LivePlayerContract.View> {

@@ -1,4 +1,4 @@
-package com.cokus.fangdouyu.ui.activity.player;
+package com.cokus.fangdouyu.ui.activity.player.mediacontroller;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
@@ -174,7 +174,7 @@ public class MediaControllVertical extends FrameLayout implements IMediaControll
         }
     }
 
-    interface MediaControllerVer{
+   public interface MediaControllerVer{
         void back();
         void full();
     }

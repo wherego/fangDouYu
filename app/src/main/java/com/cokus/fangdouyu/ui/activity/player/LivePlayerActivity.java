@@ -6,67 +6,97 @@ import android.graphics.drawable.AnimationDrawable;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.view.ViewPager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
-import android.widget.Toast;
+import android.widget.TextView;
+
 import com.cokus.fangdouyu.R;
+import com.cokus.fangdouyu.db.HistoryRoom;
+import com.cokus.fangdouyu.event.RoomEvent;
 import com.cokus.fangdouyu.modle.GsonDouyuRoom;
 import com.cokus.fangdouyu.mvp.base.BaseMvpActivity;
+import com.cokus.fangdouyu.mvp.base.BaseMvpEventbusActivity;
+import com.cokus.fangdouyu.ui.activity.player.danmu.DanmuProcess;
+import com.cokus.fangdouyu.ui.activity.player.fragment.ChatFragment;
+import com.cokus.fangdouyu.ui.activity.player.mediacontroller.MediaControllHortical;
+import com.cokus.fangdouyu.ui.activity.player.mediacontroller.MediaControllPhone;
+import com.cokus.fangdouyu.ui.activity.player.mediacontroller.MediaControllVertical;
+import com.cokus.fangdouyu.ui.fragment.home.HomeFragment;
+import com.cokus.fangdouyu.ui.fragment.home.game.GameFragment;
+import com.cokus.fangdouyu.ui.fragment.home.recommend.RecommendFragment;
+import com.cokus.fangdouyu.util.DensityUtil;
+import com.cokus.fangdouyu.util.NetworkUtils;
 import com.cokus.fangdouyu.util.RecyclerViewUtil;
 import com.cokus.fangdouyu.util.ScreenUtils;
 import com.cokus.fangdouyu.util.ToastUtils;
+import com.cokus.fangdouyu.widget.viewpagerindicator.view.indicator.FixedIndicatorView;
+import com.cokus.fangdouyu.widget.viewpagerindicator.view.indicator.IndicatorViewPager;
+import com.cokus.fangdouyu.widget.viewpagerindicator.view.indicator.slidebar.ColorBar;
+import com.cokus.fangdouyu.widget.viewpagerindicator.view.indicator.slidebar.LayoutBar;
+import com.cokus.fangdouyu.widget.viewpagerindicator.view.indicator.slidebar.ScrollBar;
+import com.cokus.fangdouyu.widget.viewpagerindicator.view.indicator.transition.OnTransitionTextListener;
 import com.pili.pldroid.player.AVOptions;
 import com.pili.pldroid.player.PLMediaPlayer;
 import com.pili.pldroid.player.widget.PLVideoTextureView;
 
+import org.greenrobot.eventbus.Subscribe;
+
 import java.util.ArrayList;
 import java.util.List;
-
 import butterknife.BindView;
 import master.flame.danmaku.controller.IDanmakuView;
-import master.flame.danmaku.ui.widget.DanmakuView;
 import qiu.niorgai.StatusBarCompat;
-import rx.internal.util.PlatformDependent;
 
 
 /**
  *  This is a demo activity of PLVideoTextureView
  */
-public class PLVideoTextureActivity extends BaseMvpActivity<LivePlayerPresenter,LivePlayerModel> implements LivePlayerContract.View {
+public class LivePlayerActivity extends BaseMvpEventbusActivity<LivePlayerPresenter,LivePlayerModel> implements LivePlayerContract.View {
 
     private static final int MESSAGE_ID_RECONNECTING = 0x01;
 
     private MediaControllVertical mediaControllVertical;
     private MediaControllHortical mediaControllHortical;
+    private MediaControllPhone mediaControllPhone;
     private PLVideoTextureView mVideoView;
-    private Toast mToast = null;
     private String mVideoPath = null;
-    private int mRotation = 0;
-    private int mDisplayAspectRatio = PLVideoTextureView.ASPECT_RATIO_FIT_PARENT; //default
     private View mLoadingView;
     private View mCoverView = null;
     private boolean mIsActivityPaused = true;
-    private int mIsLiveStreaming = 1;
     @BindView(R.id.load_img)
     ImageView loadImg;
     @BindView(R.id.player_layout_vertical)
     FrameLayout playerLayoutVertical;
     @BindView(R.id.danmakuView)
     IDanmakuView mDanmakuView;
-    @BindView(R.id.chatRecyclerView)
-    RecyclerView chatRecyclerView;
 
-    private List<String> chatmsg = new ArrayList<>();
-    private ChatMsgAdapter chatMsgAdapter;
 
-    private String mRoomId;
+    @BindView(R.id.fragment_livechat_indicator)
+    FixedIndicatorView livechatIndicator;
+    @BindView(R.id.fragment_livechat_viewPager)
+    ViewPager viewPager;
+    private int index;
+    private String tabs[] = {"聊天", "主播"};
+    private IndicatorViewPager indicatorViewPager;
+    private LayoutInflater inflate;
+
+
 
     private  boolean  isFull = false;
     private DanmuProcess mDanmuProcess;
+    private ChatFragment chatFragment = new ChatFragment();
+    private HistoryRoom historyRoom;
+
+
 
     private void setOptions() {
         int codec = getIntent().getIntExtra("mediaCodec", AVOptions.MEDIA_CODEC_SW_DECODE);
@@ -81,28 +111,18 @@ public class PLVideoTextureActivity extends BaseMvpActivity<LivePlayerPresenter,
         mVideoView.setAVOptions(mAVOptions);
     }
 
-    Handler danmuHandler = new Handler(){
-        @Override
-        public void handleMessage(Message msg) {
-            super.handleMessage(msg);
-            chatmsg.add((String) msg.obj);
-            chatMsgAdapter.notifyDataSetChanged();
-            if(RecyclerViewUtil.isSlideToBottom(chatRecyclerView)){
-                chatRecyclerView.scrollToPosition(chatMsgAdapter.getItemCount()-1);
-            }
-        }
-    };
+
+    @Subscribe(sticky = true)
+    public void onRoomInfoMessage(RoomEvent roomEvent){
+         historyRoom =  roomEvent.room;
+        mPresenter.getDate(historyRoom.getRoomId());
+        playDanmu();
+    }
+
 
 
     private void playDanmu() {
-        mDanmuProcess = new DanmuProcess(this, mDanmakuView, Integer.parseInt(mRoomId), new DanmuProcess.CallbackDanmu() {
-            @Override
-            public void callbackDanmu(String chat) {
-                Message msg =new Message();
-                msg.obj = chat;
-                danmuHandler.sendMessage(msg);
-            }
-        });
+        mDanmuProcess = new DanmuProcess(this, mDanmakuView, Integer.parseInt(historyRoom.getRoomId()), chatFragment.getCallbackDanmu());
         mDanmakuView.hide();
         mDanmuProcess.start();
     }
@@ -110,7 +130,8 @@ public class PLVideoTextureActivity extends BaseMvpActivity<LivePlayerPresenter,
 
     @Override
     protected void initView() {
-        StatusBarCompat.setStatusBarColor(PLVideoTextureActivity.this, Color.parseColor("#cc000000"));
+        StatusBarCompat.setStatusBarColor(LivePlayerActivity.this, Color.parseColor("#cc000000"));
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         mVideoView = (PLVideoTextureView) findViewById(R.id.VideoView);
         mVideoView.getLayoutParams().height = ScreenUtils.getScreenWidth(this)*720/1280;
         playerLayoutVertical.getLayoutParams().height  =ScreenUtils.getScreenWidth(this)*720/1280;
@@ -120,14 +141,91 @@ public class PLVideoTextureActivity extends BaseMvpActivity<LivePlayerPresenter,
         mCoverView = (ImageView) findViewById(R.id.CoverView);
         mCoverView.getLayoutParams().height  =ScreenUtils.getScreenWidth(this)*720/1280;
         mVideoView.setCoverView(mCoverView);
-        mRoomId = getIntent().getStringExtra("roomId");
         loadImg.setImageResource(R.drawable.load_content_anim);
         AnimationDrawable animationDrawable = (AnimationDrawable) loadImg.getDrawable();
         animationDrawable.start();
-        chatMsgAdapter = new ChatMsgAdapter(chatmsg);
-        chatRecyclerView.setLayoutManager(new LinearLayoutManager(this));
-        chatRecyclerView.setAdapter(chatMsgAdapter);
-        playDanmu();
+
+
+        mVideoView.setOnVideoSizeChangedListener(new PLMediaPlayer.OnVideoSizeChangedListener() {
+            @Override
+            public void onVideoSizeChanged(PLMediaPlayer plMediaPlayer, int i, int i1, int i2, int i3) {
+                if(i1>i){
+                    playerLayoutVertical.getLayoutParams().height = ScreenUtils.getScreenHeight(LivePlayerActivity.this);
+                    mVideoView.getLayoutParams().height = ScreenUtils.getScreenHeight(LivePlayerActivity.this);
+                    mediaControllPhone = new MediaControllPhone(LivePlayerActivity.this, new MediaControllPhone.MediaControllerPhone() {
+                        @Override
+                        public void back() {
+                            myFinish();
+                        }
+                    });
+                    mVideoView.setMediaController(mediaControllPhone);
+                }
+            }
+        });
+        inittabs();
+
+    }
+
+    void inittabs(){
+        index = 0;
+        switch (index) {
+            case 0:
+                ColorBar line1 = new ColorBar(getApplicationContext(), Color.parseColor("#ffff921b"), 5);
+                line1.setWidth(DensityUtil.dip2px(this, 85));
+                line1.setHeight(DensityUtil.dip2px(this, 3));
+                livechatIndicator.setScrollBar(line1);
+                break;
+            case 1:
+                livechatIndicator.setScrollBar(new ColorBar(getApplicationContext(), Color.parseColor("#ffff921b"), 0, ScrollBar.Gravity.CENTENT_BACKGROUND));
+                break;
+            case 2:
+                livechatIndicator.setScrollBar(new ColorBar(getApplicationContext(), Color.parseColor("#ffff921b"), 5, ScrollBar.Gravity.TOP));
+                break;
+            case 3:
+                livechatIndicator.setScrollBar(new LayoutBar(getApplicationContext(), R.layout.layout_slidebar, ScrollBar.Gravity.CENTENT_BACKGROUND));
+                break;
+        }
+        float unSelectSize = 15;
+        float selectSize = 15;
+        int selectColor = Color.parseColor("#ffff921b");
+        int unSelectColor = Color.BLACK;
+        livechatIndicator.setOnTransitionListener(new OnTransitionTextListener().setColor(selectColor, unSelectColor).setSize(selectSize, unSelectSize));
+        viewPager.setOffscreenPageLimit(5);
+        indicatorViewPager = new IndicatorViewPager(livechatIndicator, viewPager);
+        inflate = LayoutInflater.from(getApplicationContext());
+        // 注意这里 的FragmentManager 是 getChildFragmentManager(); 因为是在Fragment里面
+        // 而在activity里面用FragmentManager 是 getSupportFragmentManager()
+        indicatorViewPager.setAdapter(new LivePlayerActivity.MyAdapter(getSupportFragmentManager()));
+    }
+
+    private class MyAdapter extends IndicatorViewPager.IndicatorFragmentPagerAdapter {
+        private List<Fragment> fragments = new ArrayList<>();
+        public MyAdapter(FragmentManager fragmentManager) {
+            super(fragmentManager);
+        }
+
+        @Override
+        public int getCount() {
+            return tabs.length;
+        }
+
+        @Override
+        public View getViewForTab(int position, View convertView, ViewGroup container) {
+            if (convertView == null) {
+                convertView = inflate.inflate(R.layout.tab_textview, container, false);
+                fragments.add(chatFragment);
+                fragments.add(new RecommendFragment());
+            }
+            TextView textView = (TextView) convertView;
+            textView.setText(tabs[position]);
+            return convertView;
+        }
+
+
+        @Override
+        public Fragment getFragmentForPage(int position) {
+            return fragments.get(position);
+        }
     }
 
 
@@ -135,15 +233,15 @@ public class PLVideoTextureActivity extends BaseMvpActivity<LivePlayerPresenter,
         mediaControllVertical = new MediaControllVertical(this, new MediaControllVertical.MediaControllerVer() {
             @Override
             public void back() {
-                finish();
+                myFinish();
             }
             @Override
             public void full() {
                     isFull = true;
                     setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
                     getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
-                    mVideoView.getLayoutParams().height = ScreenUtils.getScreenHeight(PLVideoTextureActivity.this)*1280/720;
-                    playerLayoutVertical.getLayoutParams().height  =ScreenUtils.getScreenHeight(PLVideoTextureActivity.this)*1280/720;
+                    mVideoView.getLayoutParams().height = ScreenUtils.getScreenHeight(LivePlayerActivity.this)*1280/720;
+                    playerLayoutVertical.getLayoutParams().height  =ScreenUtils.getScreenHeight(LivePlayerActivity.this)*1280/720;
                     initPlayerHor();
                     mDanmakuView.show();
             }
@@ -165,10 +263,10 @@ public class PLVideoTextureActivity extends BaseMvpActivity<LivePlayerPresenter,
                     isFull = false;
                 getWindow().clearFlags(
                         WindowManager.LayoutParams.FLAG_FULLSCREEN);
-                StatusBarCompat.setStatusBarColor(PLVideoTextureActivity.this, Color.parseColor("#cc000000"));
+                StatusBarCompat.setStatusBarColor(LivePlayerActivity.this, Color.parseColor("#cc000000"));
                     setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
-                    mVideoView.getLayoutParams().height = ScreenUtils.getScreenWidth(PLVideoTextureActivity.this)*720/1280;
-                    playerLayoutVertical.getLayoutParams().height  =ScreenUtils.getScreenWidth(PLVideoTextureActivity.this)*720/1280;
+                    mVideoView.getLayoutParams().height = ScreenUtils.getScreenWidth(LivePlayerActivity.this)*720/1280;
+                    playerLayoutVertical.getLayoutParams().height  =ScreenUtils.getScreenWidth(LivePlayerActivity.this)*720/1280;
                 initPlayerVer();
                 mDanmakuView.hide();
             }
@@ -180,17 +278,15 @@ public class PLVideoTextureActivity extends BaseMvpActivity<LivePlayerPresenter,
     private void playInit(){
         setOptions();
         initPlayerVer();
-
         mVideoView.setOnCompletionListener(mOnCompletionListener);
         mVideoView.setOnErrorListener(mOnErrorListener);
-
         mVideoView.setVideoPath(mVideoPath);
         mVideoView.start();
     }
 
     @Override
     protected void loadData() {
-        mPresenter.getDate(mRoomId);
+
     }
 
     @Override
@@ -199,13 +295,9 @@ public class PLVideoTextureActivity extends BaseMvpActivity<LivePlayerPresenter,
     }
 
 
-
-
-
     @Override
     protected void onPause() {
         super.onPause();
-        mToast = null;
         mVideoView.pause();
         mIsActivityPaused = true;
     }
@@ -220,15 +312,9 @@ public class PLVideoTextureActivity extends BaseMvpActivity<LivePlayerPresenter,
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        mVideoView.stopPlayback();
-        mDanmuProcess.finish();
+        if(mVideoView!=null){ mVideoView.stopPlayback();}
+        if(mDanmuProcess!=null){mDanmuProcess.finish();}
     }
-
-    public void onClickRotate(View v) {
-        mRotation = (mRotation + 90) % 360;
-        mVideoView.setDisplayOrientation(mRotation);
-    }
-
 
 
     private PLMediaPlayer.OnErrorListener mOnErrorListener = new PLMediaPlayer.OnErrorListener() {
@@ -237,38 +323,38 @@ public class PLVideoTextureActivity extends BaseMvpActivity<LivePlayerPresenter,
             boolean isNeedReconnect = false;
             switch (errorCode) {
                 case PLMediaPlayer.ERROR_CODE_INVALID_URI:
-                    showToastTips("Invalid URL !");
+                    ToastUtils.showLongToast(LivePlayerActivity.this,"Invalid URL !");
                     break;
                 case PLMediaPlayer.ERROR_CODE_404_NOT_FOUND:
-                    showToastTips("404 resource not found !");
+                    ToastUtils.showLongToast(LivePlayerActivity.this,"404 resource not found !");
                     break;
                 case PLMediaPlayer.ERROR_CODE_CONNECTION_REFUSED:
-                    showToastTips("Connection refused !");
+                    ToastUtils.showLongToast(LivePlayerActivity.this,"Connection refused !");
                     break;
                 case PLMediaPlayer.ERROR_CODE_CONNECTION_TIMEOUT:
-                    showToastTips("Connection timeout !");
+                    ToastUtils.showLongToast(LivePlayerActivity.this,"Connection timeout !");
                     isNeedReconnect = true;
                     break;
                 case PLMediaPlayer.ERROR_CODE_EMPTY_PLAYLIST:
-                    showToastTips("Empty playlist !");
+                    ToastUtils.showLongToast(LivePlayerActivity.this,"Empty playlist !");
                     break;
                 case PLMediaPlayer.ERROR_CODE_STREAM_DISCONNECTED:
-                    showToastTips("Stream disconnected !");
+                    ToastUtils.showLongToast(LivePlayerActivity.this,"Stream disconnected !");
                     isNeedReconnect = true;
                     break;
                 case PLMediaPlayer.ERROR_CODE_IO_ERROR:
-                    showToastTips("Network IO Error !");
+                    ToastUtils.showLongToast(LivePlayerActivity.this,"Network IO Error !");
                     isNeedReconnect = true;
                     break;
                 case PLMediaPlayer.ERROR_CODE_UNAUTHORIZED:
-                    showToastTips("Unauthorized Error !");
+                    ToastUtils.showLongToast(LivePlayerActivity.this,"Unauthorized Error !");
                     break;
                 case PLMediaPlayer.ERROR_CODE_PREPARE_TIMEOUT:
-                    showToastTips("Prepare timeout !");
+                    ToastUtils.showLongToast(LivePlayerActivity.this,"Prepare timeout !");
                     isNeedReconnect = true;
                     break;
                 case PLMediaPlayer.ERROR_CODE_READ_FRAME_TIMEOUT:
-                    showToastTips("Read frame timeout !");
+                    ToastUtils.showLongToast(LivePlayerActivity.this,"Read frame timeout !");
                     isNeedReconnect = true;
                     break;
                 case PLMediaPlayer.ERROR_CODE_HW_DECODE_FAILURE:
@@ -278,7 +364,7 @@ public class PLVideoTextureActivity extends BaseMvpActivity<LivePlayerPresenter,
                 case PLMediaPlayer.MEDIA_ERROR_UNKNOWN:
                     break;
                 default:
-                    showToastTips("unknown error !");
+                    ToastUtils.showLongToast(LivePlayerActivity.this,"unknown error !");
                     break;
             }
             // Todo pls handle the error status here, reconnect or call finish()
@@ -294,26 +380,14 @@ public class PLVideoTextureActivity extends BaseMvpActivity<LivePlayerPresenter,
     private PLMediaPlayer.OnCompletionListener mOnCompletionListener = new PLMediaPlayer.OnCompletionListener() {
         @Override
         public void onCompletion(PLMediaPlayer plMediaPlayer) {
-            showToastTips("Play Completed !");
+            ToastUtils.showLongToast(LivePlayerActivity.this,"Play Completed !");
             finish();
         }
     };
 
-    private void showToastTips(final String tips) {
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                if (mToast != null) {
-                    mToast.cancel();
-                }
-                mToast = Toast.makeText(PLVideoTextureActivity.this, tips, Toast.LENGTH_SHORT);
-                mToast.show();
-            }
-        });
-    }
 
     private void sendReconnectMessage() {
-        showToastTips("正在重连...");
+        ToastUtils.showLongToast(this,"正在重连...");
         mLoadingView.setVisibility(View.VISIBLE);
         mHandler.removeCallbacksAndMessages(null);
         mHandler.sendMessageDelayed(mHandler.obtainMessage(MESSAGE_ID_RECONNECTING), 500);
@@ -325,11 +399,11 @@ public class PLVideoTextureActivity extends BaseMvpActivity<LivePlayerPresenter,
             if (msg.what != MESSAGE_ID_RECONNECTING) {
                 return;
             }
-            if (mIsActivityPaused || !Utils.isLiveStreamingAvailable()) {
+            if (mIsActivityPaused ) {
                 finish();
                 return;
             }
-            if (!Utils.isNetworkAvailable(PLVideoTextureActivity.this)) {
+            if (!NetworkUtils.isConnected(LivePlayerActivity.this)) {
                 sendReconnectMessage();
                 return;
             }
@@ -352,6 +426,5 @@ public class PLVideoTextureActivity extends BaseMvpActivity<LivePlayerPresenter,
     public void getData(GsonDouyuRoom data) {
         mVideoPath = data.getData().getHls_url();
         playInit();
-
     }
 }

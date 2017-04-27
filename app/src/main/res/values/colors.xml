@@ -11,4 +11,5 @@
     <color name="halftransparent">#e0000000</color>
     <color name="transparent">#00000000</color>
     <color name="black_transparent">#b3000000</color>
+    <color name="gray_bg">#EAEAEA</color>
 </resources>

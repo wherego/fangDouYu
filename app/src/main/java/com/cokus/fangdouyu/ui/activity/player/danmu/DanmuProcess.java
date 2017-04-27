@@ -1,4 +1,4 @@
-package com.cokus.fangdouyu.ui.activity.player;
+package com.cokus.fangdouyu.ui.activity.player.danmu;
 
 import android.content.Context;
 import android.graphics.Color;

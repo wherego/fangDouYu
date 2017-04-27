@@ -1,23 +1,31 @@
 package com.cokus.fangdouyu.ui.fragment.home.game;
 
 
+import android.content.Intent;
 import android.support.v4.view.ViewPager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import com.cokus.fangdouyu.R;
+import com.cokus.fangdouyu.db.HistoryRoom;
+import com.cokus.fangdouyu.listener.OnItemClick;
 import com.cokus.fangdouyu.modle.game.Game;
 import com.cokus.fangdouyu.mvp.base.BaseMvpFragment;
+import com.cokus.fangdouyu.ui.activity.player.LivePlayerActivity;
 import com.cokus.fangdouyu.ui.fragment.home.game.adapter.GameAdapter;
 import com.cokus.fangdouyu.ui.fragment.home.game.adapter.GameIndicatorViewPagerAdapter;
 import com.cokus.fangdouyu.util.DensityUtil;
+import com.cokus.fangdouyu.util.IntentUtils;
 import com.cokus.fangdouyu.widget.MultiStateView;
 import com.cokus.fangdouyu.widget.refresh.DouYuRefreshEmptyBottem;
 import com.cokus.fangdouyu.widget.refresh.DouYuRefreshHeader;
 import com.cokus.fangdouyu.widget.viewpagerindicator.view.indicator.BannerComponent;
 import com.cokus.fangdouyu.widget.viewpagerindicator.view.indicator.FixedIndicatorView;
 import com.lcodecore.tkrefreshlayout.TwinklingRefreshLayout;
+
+import org.greenrobot.eventbus.EventBus;
+
 import butterknife.BindView;
 
 /**
@@ -100,7 +108,20 @@ public class GameFragment extends BaseMvpFragment<GamePresenter,GameModel> imple
 
     private void initRecyclerView(){
         if(gameAdapter == null) {
-            gameAdapter = new GameAdapter(game.getData(), getActivity());
+            gameAdapter = new GameAdapter(game.getData(), getActivity(), new OnItemClick() {
+                @Override
+                public <T> void OnItemClick(int position, T t) {
+                    Game.DataBean.RoomListBean bean = ( Game.DataBean.RoomListBean)t;
+                    Intent intent =  IntentUtils.getIntent(getActivity(), LivePlayerActivity.class,null);
+                    startActivity(intent);
+                    HistoryRoom historyRoom = new HistoryRoom();
+                    historyRoom.setAvatar(bean.getNickname());
+                    historyRoom.setAvatar_small(bean.getAvatar_small());
+                    historyRoom.setRoomId(bean.getRoom_id());
+                    historyRoom.setOnline(bean.getOnline());
+                    EventBus.getDefault().postSticky(historyRoom);
+                }
+            });
             gameAdapter.addHeaderView(headView);
             mRecyclerView.setAdapter(gameAdapter);
         }else{

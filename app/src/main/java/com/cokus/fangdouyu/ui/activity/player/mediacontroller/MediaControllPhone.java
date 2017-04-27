@@ -1,4 +1,4 @@
-package com.cokus.fangdouyu.ui.activity.player;
+package com.cokus.fangdouyu.ui.activity.player.mediacontroller;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
@@ -24,32 +24,31 @@ import com.pili.pldroid.player.IMediaController;
  * Created by chenzhuo on 2017/4/25.
  */
 
-public class MediaControllHortical extends FrameLayout implements IMediaController,View.OnClickListener {
+public class MediaControllPhone extends FrameLayout implements IMediaController,View.OnClickListener {
     private PopupWindow mWindow;
     private Context mContext;
     private View mRoot;
     private View mAnchor;
 
     private View backView;
-    private View fullView;
     private final static int HIDE = 1000;
     private final static int SHOWTIME = 3000;
 
-    private MediaControllerHor mediaControllerHor;
+    private MediaControllerPhone mediaControllerPhone;
 
 
-    public MediaControllHortical(@NonNull Context context, MediaControllerHor mediaControllerHor) {
+    public MediaControllPhone(@NonNull Context context, MediaControllerPhone mediaControllerPhone) {
         super(context);
         this.mContext = context;
         initFloatingWindow();
-        this.mediaControllerHor = mediaControllerHor;
+        this.mediaControllerPhone = mediaControllerPhone;
     }
 
-    public MediaControllHortical(@NonNull Context context, @Nullable AttributeSet attrs) {
+    public MediaControllPhone(@NonNull Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
     }
 
-    public MediaControllHortical(@NonNull Context context, @Nullable AttributeSet attrs, @AttrRes int defStyleAttr) {
+    public MediaControllPhone(@NonNull Context context, @Nullable AttributeSet attrs, @AttrRes int defStyleAttr) {
         super(context, attrs, defStyleAttr);
     }
 
@@ -76,15 +75,13 @@ public class MediaControllHortical extends FrameLayout implements IMediaControll
     private  void initMediaControll(View mRoot){
         mRoot.findViewById(R.id.verMediaControll).getLayoutParams().height =ScreenUtils.getScreenWidth(mContext)*720/1280;
         backView = mRoot.findViewById(R.id.player_back);
-        fullView = mRoot.findViewById(R.id.player_full);
 
         backView.setOnClickListener(this);
-        fullView.setOnClickListener(this);
     }
 
     protected View makeControllerView() {
         return ((LayoutInflater) mContext
-                .getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(R.layout.mediacontroller_hortical, this);
+                .getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(R.layout.mediacontroller_phone, this);
     }
 
     @Override
@@ -156,7 +153,7 @@ public class MediaControllHortical extends FrameLayout implements IMediaControll
         mRoot = makeControllerView();
         mWindow.setContentView(mRoot);
         mWindow.setWidth(LayoutParams.MATCH_PARENT);
-        mWindow.setHeight(ScreenUtils.getScreenHeight(mContext));
+        mWindow.setHeight(ScreenUtils.getScreenWidth(mContext)*720/1280);
         initMediaControll(mRoot);
     }
 
@@ -164,16 +161,12 @@ public class MediaControllHortical extends FrameLayout implements IMediaControll
     public void onClick(View v) {
         switch (v.getId()){
             case R.id.player_back:
-                mediaControllerHor.back();
-                break;
-            case R.id.player_full:
-                mediaControllerHor.full();
+                mediaControllerPhone.back();
                 break;
         }
     }
 
-    interface MediaControllerHor{
+    public interface MediaControllerPhone{
         void back();
-        void full();
     }
 }
