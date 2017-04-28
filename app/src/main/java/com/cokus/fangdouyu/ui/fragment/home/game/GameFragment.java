@@ -9,6 +9,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import com.cokus.fangdouyu.R;
 import com.cokus.fangdouyu.db.HistoryRoom;
+import com.cokus.fangdouyu.event.RoomEvent;
 import com.cokus.fangdouyu.listener.OnItemClick;
 import com.cokus.fangdouyu.modle.game.Game;
 import com.cokus.fangdouyu.mvp.base.BaseMvpFragment;
@@ -119,7 +120,7 @@ public class GameFragment extends BaseMvpFragment<GamePresenter,GameModel> imple
                     historyRoom.setAvatar_small(bean.getAvatar_small());
                     historyRoom.setRoomId(bean.getRoom_id());
                     historyRoom.setOnline(bean.getOnline());
-                    EventBus.getDefault().postSticky(historyRoom);
+                    EventBus.getDefault().postSticky(new RoomEvent(historyRoom));
                 }
             });
             gameAdapter.addHeaderView(headView);

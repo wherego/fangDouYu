@@ -1,5 +1,6 @@
 package com.cokus.fangdouyu.ui.fragment.live.room;
 
+import android.content.Intent;
 import android.os.Handler;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -8,15 +9,23 @@ import android.view.ViewGroup;
 
 import com.cokus.fangdouyu.R;
 import com.cokus.fangdouyu.base.adapter.BaseQuickAdapter;
+import com.cokus.fangdouyu.db.HistoryRoom;
+import com.cokus.fangdouyu.event.RoomEvent;
+import com.cokus.fangdouyu.listener.OnItemClick;
 import com.cokus.fangdouyu.modle.live.LiveRoom;
 import com.cokus.fangdouyu.mvp.base.BaseMvpFragment;
+import com.cokus.fangdouyu.ui.activity.player.LivePlayerActivity;
 import com.cokus.fangdouyu.ui.fragment.live.room.adapter.LiveCategoryRoomAdapter;
+import com.cokus.fangdouyu.util.IntentUtils;
 import com.cokus.fangdouyu.util.ToastUtils;
 import com.cokus.fangdouyu.widget.MultiStateView;
 import com.cokus.fangdouyu.widget.refresh.DouYuRefreshEmptyBottem;
 import com.cokus.fangdouyu.widget.refresh.DouYuRefreshHeader;
 import com.lcodecore.tkrefreshlayout.TwinklingRefreshLayout;
 import com.orhanobut.logger.Logger;
+
+import org.greenrobot.eventbus.EventBus;
+
 import butterknife.BindView;
 
 /**
@@ -103,7 +112,20 @@ public class LiveCategoryRoomFragment extends BaseMvpFragment<LiveCategoryRoomPr
     }
 
     private void initRecyclerView(){
-         roomAdapter = new LiveCategoryRoomAdapter(liveRoom.getData());
+         roomAdapter = new LiveCategoryRoomAdapter(liveRoom.getData(), new OnItemClick() {
+             @Override
+             public <T> void OnItemClick(int position, T t) {
+                 LiveRoom.DataBean bean = (LiveRoom.DataBean) t;
+                 Intent intent =  IntentUtils.getIntent(getActivity(), LivePlayerActivity.class,null);
+                 startActivity(intent);
+                 HistoryRoom historyRoom = new HistoryRoom();
+                 historyRoom.setAvatar(bean.getNickname());
+                 historyRoom.setAvatar_small(bean.getAvatar_small());
+                 historyRoom.setRoomId(bean.getRoom_id());
+                 historyRoom.setOnline(bean.getOnline());
+                 EventBus.getDefault().postSticky(new RoomEvent(historyRoom));
+             }
+         });
          View customLoading = getActivity().getLayoutInflater().inflate(R.layout.refresh_load_more, (ViewGroup) mRecyclerView.getParent(), false);
             roomAdapter.setLoadingView(customLoading);
             roomAdapter.openLoadAnimation();

@@ -11,6 +11,7 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.view.ViewPager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -19,9 +20,11 @@ import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.cokus.fangdouyu.DYApplication;
 import com.cokus.fangdouyu.R;
 import com.cokus.fangdouyu.db.HistoryRoom;
 import com.cokus.fangdouyu.event.RoomEvent;
+import com.cokus.fangdouyu.gen.HistoryRoomDao;
 import com.cokus.fangdouyu.modle.GsonDouyuRoom;
 import com.cokus.fangdouyu.mvp.base.BaseMvpActivity;
 import com.cokus.fangdouyu.mvp.base.BaseMvpEventbusActivity;
@@ -34,6 +37,7 @@ import com.cokus.fangdouyu.ui.fragment.home.HomeFragment;
 import com.cokus.fangdouyu.ui.fragment.home.game.GameFragment;
 import com.cokus.fangdouyu.ui.fragment.home.recommend.RecommendFragment;
 import com.cokus.fangdouyu.util.DensityUtil;
+import com.cokus.fangdouyu.util.LogUtils;
 import com.cokus.fangdouyu.util.NetworkUtils;
 import com.cokus.fangdouyu.util.RecyclerViewUtil;
 import com.cokus.fangdouyu.util.ScreenUtils;
@@ -114,14 +118,23 @@ public class LivePlayerActivity extends BaseMvpEventbusActivity<LivePlayerPresen
 
     @Subscribe(sticky = true)
     public void onRoomInfoMessage(RoomEvent roomEvent){
-         historyRoom =  roomEvent.room;
+        historyRoom =  roomEvent.room;
         mPresenter.getDate(historyRoom.getRoomId());
         playDanmu();
+        addPlayRecord();
+    }
+
+
+    public void addPlayRecord(){
+         long test= DYApplication.getInstances().getDaoSession().getHistoryRoomDao().insert(historyRoom);
+         List<HistoryRoom> historyRooms = DYApplication.getInstances().getDaoSession().getHistoryRoomDao().loadAll();
+        ToastUtils.showLongToast(this,historyRooms.size()+"ssssssssssssss");
     }
 
 
 
     private void playDanmu() {
+
         mDanmuProcess = new DanmuProcess(this, mDanmakuView, Integer.parseInt(historyRoom.getRoomId()), chatFragment.getCallbackDanmu());
         mDanmakuView.hide();
         mDanmuProcess.start();

@@ -50,4 +50,5 @@ public class HistoryRoom {
         this.online = online;
     }
 
+
 }

@@ -1,5 +1,6 @@
 package com.cokus.fangdouyu.ui.fragment.concern;
 
+import android.content.Intent;
 import android.os.Handler;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -7,13 +8,21 @@ import android.view.LayoutInflater;
 import android.view.View;
 
 import com.cokus.fangdouyu.R;
+import com.cokus.fangdouyu.db.HistoryRoom;
+import com.cokus.fangdouyu.event.RoomEvent;
+import com.cokus.fangdouyu.listener.OnItemClick;
 import com.cokus.fangdouyu.modle.concern.RecommendLiveRoom;
+import com.cokus.fangdouyu.modle.live.LiveRoom;
 import com.cokus.fangdouyu.mvp.base.BaseMvpFragment;
+import com.cokus.fangdouyu.ui.activity.player.LivePlayerActivity;
 import com.cokus.fangdouyu.ui.fragment.concern.adapter.RecommendLiveRoomAdapter;
+import com.cokus.fangdouyu.util.IntentUtils;
 import com.cokus.fangdouyu.widget.MultiStateView;
 import com.cokus.fangdouyu.widget.refresh.DouYuRefreshEmptyBottem;
 import com.cokus.fangdouyu.widget.refresh.DouYuRefreshHeader;
 import com.lcodecore.tkrefreshlayout.TwinklingRefreshLayout;
+
+import org.greenrobot.eventbus.EventBus;
 
 import javax.inject.Inject;
 
@@ -63,7 +72,20 @@ public class UnloginConcernFragment extends BaseMvpFragment<UnloginConcernPresen
 
     @Override
     public void getData(RecommendLiveRoom data) {
-        adapter = new RecommendLiveRoomAdapter(data.getData().getNew_bie());
+        adapter = new RecommendLiveRoomAdapter(data.getData().getNew_bie(), new OnItemClick() {
+            @Override
+            public <T> void OnItemClick(int position, T t) {
+                RecommendLiveRoom.DataBean.NewBieBean bean = (RecommendLiveRoom.DataBean.NewBieBean) t;
+                Intent intent =  IntentUtils.getIntent(getActivity(), LivePlayerActivity.class,null);
+                startActivity(intent);
+                HistoryRoom historyRoom = new HistoryRoom();
+                historyRoom.setAvatar(bean.getNickname());
+//                historyRoom.setAvatar_small(bean.get);
+                historyRoom.setRoomId(bean.getRoom_id());
+                historyRoom.setOnline(bean.getOnline());
+                EventBus.getDefault().postSticky(new RoomEvent(historyRoom));
+            }
+        });
         adapter.addHeaderView(headView);
         mRecyclerView.setAdapter(adapter);
 
